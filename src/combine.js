@@ -279,7 +279,6 @@ function processStandardField(composer, name, field, args) {
 function processResolverField(composer, name, getResolverName, resolver) {
     const resolverName = getResolverName(resolver);
     if (resolverName) {
-
         resolver = composer.getResolver(resolverName);
     } else {
         resolver = cloneResolver(composer, undefined, resolver);
@@ -290,7 +289,7 @@ function processResolverField(composer, name, getResolverName, resolver) {
 function cloneResolver(composer, name, resolver) {
     composer.addResolver({ name });
     const resolverClone = composer.getResolver(name);
-
+    resolverClone.setDescription(resolver.getDescription());
     resolverClone.setType(typeName(resolver.type));
     resolver.getArgNames().forEach(name => {
         const arg = resolver.getArg(name);
