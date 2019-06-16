@@ -1,21 +1,21 @@
 {
-  "name": "@major-mann/graphql-mutator",
-  "version": "0.0.1",
-  "description": "A library for working with graphql-compose types",
-  "main": "src/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "graphql",
-    "compose",
-    "stitch",
-    "combine",
-    "schema"
-  ],
-  "author": "Calvin Mann <calvinmann+npm@gmail.com>",
-  "license": "MIT",
-  "peerDependencies": {
-    "graphql": "^14.3.1"
-  }
+    "name": "@major-mann/graphql-mutator",
+    "version": "0.0.2",
+    "description": "A library for working with graphql-compose types",
+    "main": "src/index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "graphql",
+        "compose",
+        "stitch",
+        "combine",
+        "schema"
+    ],
+    "author": "Calvin Mann <calvinmann+npm@gmail.com>",
+    "license": "MIT",
+    "peerDependencies": {
+        "graphql": "^14.3.1"
+    }
 }
