@@ -1,9 +1,11 @@
 module.exports = combine;
 
-const BUILT_IN = ['Query', 'Mutation', 'Subscription'];
-const SCALARS = ['String', 'Int', 'Float', 'ID', 'Boolean'];
+// TODO: This needs some serious love!
 
-const { GraphQLNonNull, GraphQLList } = require('graphql');
+const BUILT_IN = [`Query`, `Mutation`, `Subscription`];
+const SCALARS = [`String`, `Int`, `Float`, `ID`, `Boolean`];
+
+const { GraphQLNonNull, GraphQLList } = require(`graphql`);
 
 const {
     SchemaComposer,
@@ -12,7 +14,7 @@ const {
     EnumTypeComposer,
     ScalarTypeComposer,
     Resolver
-} = require('graphql-compose');
+} = require(`graphql-compose`);
 
 function combine({ schema1, schema2, handleConflict = () => true }) {
     const composer = new SchemaComposer();
@@ -29,7 +31,7 @@ function combine({ schema1, schema2, handleConflict = () => true }) {
 
     function typeNames(schema) {
         return Array.from(schema.entries()).map(([name]) => name)
-            .filter(name => typeof name === 'string');
+            .filter(name => typeof name === `string`);
     }
 
     function process(name) {
@@ -58,7 +60,7 @@ function copy(schema, type) {
         const clonedType = BUILT_IN.includes(objectTypeName) ?
             schema[objectTypeName] || schema.createObjectTC({ name: type.getTypeName() }) :
             schema.createObjectTC({ name: type.getTypeName() });
-        clonedType.setDescription(type.getDescription() || '');
+        clonedType.setDescription(type.getDescription() || ``);
         type.getInterfaces().map(typeName).forEach(interfaceName => clonedType.addInterface(interfaceName));
         clonedType.setExtensions(type.getExtensions());
         for (const [resolverName, resolver] of type.getResolvers()) {
@@ -69,7 +71,7 @@ function copy(schema, type) {
         // TODO.... how to get the fields properly?
         //   all fields are returning undefined
         const clonedType = schema.createInputTC({ name: type.getTypeName() });
-        clonedType.setDescription(type.getDescription() || '');
+        clonedType.setDescription(type.getDescription() || ``);
         clonedType.setExtensions(type.getExtensions());
         type.getFieldNames().forEach(name => process(clonedType, name));
     } else if (type instanceof EnumTypeComposer) {
@@ -94,9 +96,7 @@ function copy(schema, type) {
                 clonedType,
                 fieldName,
                 field,
-                copyArgs(field.args),
-                type.getDescription(),
-                type.extensions
+                copyArgs(field.args)
             );
         }
 
@@ -113,20 +113,20 @@ function copy(schema, type) {
 
 function merge(composer, type1, type2) {
     if (type1.constructor !== type2.constructor) {
-        throw new Error('Cannot merge types created from different constructors');
+        throw new Error(`Cannot merge types created from different constructors`);
     }
 
     if (type1 instanceof ObjectTypeComposer) {
-        objectMerge(composer, type1, type2, name => schema.createObjectTC({ name }));
+        objectMerge(composer, type1, type2, name => composer.createObjectTC({ name }));
     } else if (type1 instanceof InputTypeComposer) {
-        objectMerge(composer, type1, type2, name => schema.createInputTC({ name }));
+        objectMerge(composer, type1, type2, name => composer.createInputTC({ name }));
     } else if (type1 instanceof EnumTypeComposer) {
         enumMerge(composer, type1, type2);
     } else if (type1 instanceof ScalarTypeComposer) { // TODO: Is this correct?
         if (type1.getTypeName() === type2.getTypeName()) {
             return type1;
         } else {
-            throw new Error('Unable to merge scalar types');
+            throw new Error(`Unable to merge scalar types`);
         }
     } else {
         throw new Error(`Unable to merge ${type1.constructor.name} types`);
@@ -157,28 +157,28 @@ function enumMerge(composer, enum1, enum2) {
 }
 
 function objectMerge(composer, type1, type2, create) {
-    const composer = create(type2.getTypeName());
+    const merged = create(type2.getTypeName());
 
-    composer.setDescription(type2.getDescription() || type1.getDescription() || '');
+    merged.setDescription(type2.getDescription() || type1.getDescription() || ``);
     type1.getInterfaces().map(typeName)
         .union(type2.getInterfaces().map(typeName))
-        .forEach(interfaceName => composer.addInterface(interfaceName));
+        .forEach(interfaceName => merged.addInterface(interfaceName));
 
-    composer.setExtensions(Object.assign(type1.getExtensions(), type2.getExtensions()));
+    merged.setExtensions(Object.assign(type1.getExtensions(), type2.getExtensions()));
 
     for (const [resolverName, resolver] of type2.getResolvers()) {
         cloneResolver(resolverName, resolver);
     }
     for (const [resolverName, resolver] of type1.getResolvers()) {
-        if (!composer.hasResolver(resolverName)) {
+        if (!merged.hasResolver(resolverName)) {
             cloneResolver(resolverName, resolver);
         }
     }
 
     type1.getFieldNames().forEach(process);
-    type2.getFieldNames().filter(name => !tc.has(name)).forEach(process);
+    type2.getFieldNames().filter(name => !composer.has(name)).forEach(process);
 
-    return composer;
+    return merged;
 
     function process(fieldName) {
         const field1 = type1.getField(fieldName);
@@ -204,11 +204,11 @@ function objectMerge(composer, type1, type2, create) {
             });
 
             function combineArgs(args1, args2) {
-                throw new Error('not implemented');
+                throw new Error(`not implemented`);
             }
 
             function getDescription() {
-                return field2 && field2.description || field1 && field1.description || '';
+                return field2 && field2.description || field1 && field1.description || ``;
             }
 
             function combineExtensions() {
@@ -263,11 +263,11 @@ function objectMerge(composer, type1, type2, create) {
     }
 }
 
-function processStandardField(composer, name, field, args, description, extensions) {
+function processStandardField(composer, name, field, args) {
     composer.setField(name, clean({
         args,
-        extensions,
-        description,
+        extensions: field.extensions,
+        description: field.description,
         resolve: field.resolve,
         astNode: field.astNode,
         type: typeName(field.type),
@@ -327,9 +327,9 @@ function copyArg(args, result, argName) {
 }
 
 function typeName(type) {
-    if (typeof type === 'string') {
+    if (typeof type === `string`) {
         return type;
-    } else if (typeof type.getTypeName === 'function') {
+    } else if (typeof type.getTypeName === `function`) {
         return type.getTypeName();
     } else if (type instanceof GraphQLNonNull) {
         return `${typeName(type.ofType)}!`;
@@ -341,7 +341,7 @@ function typeName(type) {
 }
 
 function clean(obj) {
-    if (obj && typeof obj === 'object') {
+    if (obj && typeof obj === `object`) {
         Object.keys(obj).forEach(key => {
             if (obj[key] === undefined) {
                 delete obj[key];

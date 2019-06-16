@@ -1,3 +1,3 @@
 module.exports = {
-    combine: require('./combine.js')
+    combine: require(`./combine.js`)
 };
